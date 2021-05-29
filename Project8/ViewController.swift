@@ -14,9 +14,13 @@ class ViewController: UIViewController {
     var scoreLabel: UILabel!
     var letterButtons = [UIButton]()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
+    var score = 0
+    var level = 1
+    
+    var solutions = [String]()
+    var activatedButtons = [UIButton]()
+    
+    func initViews() {
         view = UIView()
         view.backgroundColor = .white
         
@@ -61,6 +65,7 @@ class ViewController: UIViewController {
         let clearButton = UIButton(type: .system)
         clearButton.translatesAutoresizingMaskIntoConstraints = false
         clearButton.setTitle("CLEAR", for: .normal)
+        clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         view.addSubview(clearButton)
         
         let buttonsView = UIView()
@@ -109,6 +114,7 @@ class ViewController: UIViewController {
                 let button = UIButton(type: .system)
                 button.titleLabel?.font = .systemFont(ofSize: 36)
                 button.setTitle("WWW", for: .normal)
+                button.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
                 
                 let frame = CGRect(
                     x: column * buttonWidth,
@@ -123,6 +129,64 @@ class ViewController: UIViewController {
                 buttonsView.addSubview(button)
             }
         }
+    }
+    
+    func loadLevel() {
+        var clueString = ""
+        var solutionString = ""
+        var letterBits = [String]()
+        
+        guard let levelUrl = Bundle.main.url(forResource: "level1", withExtension: "txt") else {
+            return
+        }
+        
+        guard let levelText = try? String(contentsOf: levelUrl) else {
+            return
+        }
+        
+        let lines = levelText.components(separatedBy: "\n").shuffled()
+        
+        for (index, line) in lines.enumerated() {
+            let parts = line.components(separatedBy: ": ")
+            let answer = parts[0]
+            let clue = parts[1]
+            
+            
+            letterBits += answer.components(separatedBy: "|")
+            clueString += "\(index + 1). \(clue)\n"
+            
+            let solutionWord = answer.replacingOccurrences(of: "|", with: "")
+            solutionString = "\(solutionWord.count) letters\n"
+        }
+        
+        cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
+        answersLabel.text = solutionString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        letterBits.shuffle()
+        
+        if letterBits.count == letterButtons.count {
+            for (index, button) in letterButtons.enumerated() {
+                button.setTitle(letterBits[index], for: .normal)
+            }
+        }
+    }
+    
+    @objc func clearTapped() {
+        
+    }
+    
+    @objc func submitTapped() {
+        
+    }
+    
+    @objc func letterTapped() {
+        
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initViews()
+        loadLevel()
     }
 }
 
