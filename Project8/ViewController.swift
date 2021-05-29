@@ -14,7 +14,11 @@ class ViewController: UIViewController {
     var scoreLabel: UILabel!
     var letterButtons = [UIButton]()
     
-    var score = 0
+    var score = 0 {
+        didSet {
+            scoreLabel.text = "Score \(score)"
+        }
+    }
     var level = 1
     
     var solutions = [String]()
@@ -59,6 +63,7 @@ class ViewController: UIViewController {
         let submitButton = UIButton(type: .system)
         submitButton.translatesAutoresizingMaskIntoConstraints = false
         submitButton.setTitle("SUBMIT", for: .normal)
+        submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
         view.addSubview(submitButton)
         
         
@@ -96,7 +101,7 @@ class ViewController: UIViewController {
             submitButton.heightAnchor.constraint(equalToConstant: 44),
             
             clearButton.centerYAnchor.constraint(equalTo: submitButton.centerYAnchor),
-            clearButton.leadingAnchor.constraint(equalTo: submitButton.trailingAnchor, constant: 50),
+            clearButton.leadingAnchor.constraint(equalTo: submitButton.trailingAnchor, constant: 100),
             clearButton.heightAnchor.constraint(equalToConstant: 44),
             
             buttonsView.widthAnchor.constraint(equalToConstant: 750),
@@ -136,7 +141,7 @@ class ViewController: UIViewController {
         var solutionString = ""
         var letterBits = [String]()
         
-        guard let levelUrl = Bundle.main.url(forResource: "level1", withExtension: "txt") else {
+        guard let levelUrl = Bundle.main.url(forResource: "level\(level)", withExtension: "txt") else {
             return
         }
         
@@ -156,7 +161,8 @@ class ViewController: UIViewController {
             clueString += "\(index + 1). \(clue)\n"
             
             let solutionWord = answer.replacingOccurrences(of: "|", with: "")
-            solutionString = "\(solutionWord.count) letters\n"
+            solutionString += "\(solutionWord.count) letters\n"
+            solutions.append(solutionWord)
         }
         
         cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -172,15 +178,77 @@ class ViewController: UIViewController {
     }
     
     @objc func clearTapped() {
+        currentAnswer.text = ""
         
+        for button in activatedButtons {
+            button.isHidden = false
+        }
+        
+        activatedButtons.removeAll()
+    }
+    
+    func levelUp() {
+        level += 1
+        solutions.removeAll()
+        loadLevel()
+        
+        for button in letterButtons {
+            button.isHidden = false
+        }
+    }
+    
+    func showNextLevelAlert() {
+        let alert = UIAlertController(
+            title: "Well done!",
+            message: "Are you ready for the next level?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(
+            .init(
+                title: "Let's go!",
+                style: .default,
+                handler: {[weak self] _ in self?.levelUp() }
+            )
+        )
+        
+        present(alert, animated: true)
     }
     
     @objc func submitTapped() {
+        guard let currentAnswerText = currentAnswer.text else {
+            return
+        }
         
+        guard let solutionIndex = solutions.firstIndex(of: currentAnswerText) else {
+            return
+        }
+        
+        currentAnswer.text = ""
+        
+        guard let answersString = answersLabel.text else {
+            return
+        }
+        
+        var answers = answersString.components(separatedBy: "\n")
+        answers[solutionIndex] = solutions[solutionIndex]
+        
+        answersLabel.text = answers.joined(separator: "\n")
+        score += 1
+        
+        if score % 7 == 0 {
+            showNextLevelAlert()
+        }
     }
     
-    @objc func letterTapped() {
+    @objc func letterTapped(_ sender: UIButton) {
+        guard let text = sender.titleLabel?.text else {
+            return
+        }
         
+        currentAnswer.text = currentAnswer.text?.appending(text)
+        activatedButtons.append(sender)
+        sender.isHidden = true
     }
     
     override func viewDidLoad() {
