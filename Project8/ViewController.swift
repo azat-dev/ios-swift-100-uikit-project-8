@@ -13,16 +13,17 @@ class ViewController: UIViewController {
     var currentAnswer: UITextField!
     var scoreLabel: UILabel!
     var letterButtons = [UIButton]()
+    var activatedButtons = [UIButton]()
     
+    var level = 1
+    var numberOfCorrectAnswers = 0
+    var solutions = [String]()
     var score = 0 {
         didSet {
             scoreLabel.text = "Score \(score)"
         }
     }
-    var level = 1
     
-    var solutions = [String]()
-    var activatedButtons = [UIButton]()
     
     func initViews() {
         view = UIView()
@@ -191,6 +192,7 @@ class ViewController: UIViewController {
     
     func levelUp() {
         level += 1
+        numberOfCorrectAnswers = 0
         solutions.removeAll()
         loadLevel()
         
@@ -217,12 +219,20 @@ class ViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    func showWrongAnswerAlert() {
+        let alert = UIAlertController(title: "Wrong", message: "Wrong answer!", preferredStyle: .alert)
+        alert.addAction(.init(title: "Continue", style: .cancel))
+        present(alert, animated: true)
+    }
+    
     @objc func submitTapped() {
         guard let currentAnswerText = currentAnswer.text else {
             return
         }
         
         guard let solutionIndex = solutions.firstIndex(of: currentAnswerText) else {
+            score -= 1
+            showWrongAnswerAlert()
             return
         }
         
@@ -237,8 +247,9 @@ class ViewController: UIViewController {
         
         answersLabel.text = answers.joined(separator: "\n")
         score += 1
+        numberOfCorrectAnswers += 1
         
-        if score % 7 == 0 {
+        if numberOfCorrectAnswers % 7 == 0 {
             showNextLevelAlert()
         }
     }
