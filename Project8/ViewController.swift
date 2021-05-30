@@ -168,14 +168,16 @@ class ViewController: UIViewController {
             solutions.append(solutionWord)
         }
         
-        cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
-        answersLabel.text = solutionString.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        letterBits.shuffle()
-        
-        if letterBits.count == letterButtons.count {
-            for (index, button) in letterButtons.enumerated() {
-                button.setTitle(letterBits[index], for: .normal)
+        DispatchQueue.main.async {
+            self.cluesLabel.text = clueString.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.answersLabel.text = solutionString.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            letterBits.shuffle()
+            
+            if letterBits.count == self.letterButtons.count {
+                for (index, button) in self.letterButtons.enumerated() {
+                    button.setTitle(letterBits[index], for: .normal)
+                }
             }
         }
     }
@@ -267,7 +269,10 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         initViews()
-        loadLevel()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.loadLevel()
+        }
     }
 }
 
